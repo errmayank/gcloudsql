@@ -1,7 +1,7 @@
 {
   "name": "gcloudsql",
   "private": false,
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Minimal command line tool for adding/updating authorized networks on Google Cloud SQL",
   "license": "MIT",
   "author": {
@@ -12,7 +12,6 @@
   "type": "module",
   "main": "src/bin/main.ts",
   "bin": "dist/bin/main.js",
-  "files": ["dist"],
   "scripts": {
     "format": "prettier --write \"**/*.{js,cjs,mjs,ts,cts,mts,json,md,yaml,yml}\"",
     "format:check": "prettier --check \"**/*.{js,cjs,mjs,ts,cts,mts,json,md,yaml,yml}\"",
