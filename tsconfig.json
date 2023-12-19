@@ -1,16 +1,43 @@
 {
+  "$schema": "https://json.schemastore.org/tsconfig",
   "compilerOptions": {
-    "target": "es2022",
-    "module": "es2022",
-    "strict": true,
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
+    "target": "es6",
+    "declaration": true,
+    "removeComments": true,
+    "experimentalDecorators": true,
+    "allowSyntheticDefaultImports": true,
+    "sourceMap": true,
     "strictNullChecks": true,
-    "moduleResolution": "node",
+    "noImplicitAny": true,
+    "strictBindCallApply": true,
+    "strict": true,
+    "allowUnusedLabels": false,
+    "allowUnreachableCode": false,
+    "noFallthroughCasesInSwitch": true,
+    "noImplicitOverride": true,
+    "noImplicitReturns": true,
+    "noPropertyAccessFromIndexSignature": true,
+    "noUncheckedIndexedAccess": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "checkJs": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
+    "alwaysStrict": true,
+    "useUnknownInCatchVariables": true,
+    "strictPropertyInitialization": true,
+    "strictFunctionTypes": true,
+    "noImplicitThis": true,
     "resolveJsonModule": true,
-    "declaration": false
+    "baseUrl": "./",
+    "outDir": "./dist",
+    "paths": {
+      "$src/*": ["./src/*"]
+    }
   },
   "include": ["./src/**/*.ts"],
-  "exclude": ["./node_modules"]
+  "exclude": ["node_modules"]
 }

@@ -1,16 +1,15 @@
-import chalk from 'chalk'
-import inquirer from 'inquirer'
-import { createSpinner } from 'nanospinner'
-import { isEmpty } from 'lodash-es'
+import chalk from 'chalk';
+import inquirer from 'inquirer';
+import { createSpinner } from 'nanospinner';
 
-import { exec } from './util/exec'
-import { request } from './util/request'
-import type { GCPInstance, GCPInstanceAclEntry, GCPProject } from './util/types'
+import { exec } from '../utils/exec.js';
+import { request } from '../utils/request.js';
+import type { GCPInstance, GCPInstanceAclEntry, GCPProject } from '../schema.js';
 
 const main = async () => {
-  const accessToken = await exec('gcloud auth print-access-token')
+  const accessToken = await exec('gcloud auth print-access-token');
 
-  const spinner = createSpinner('Fetching projects for your account').start()
+  const spinner = createSpinner('Fetching projects for your account').start();
   const [projectsData, projectsError] = await request<{ projects: GCPProject[] }>({
     method: 'GET',
     url: 'https://cloudresourcemanager.googleapis.com/v1beta1/projects',
@@ -21,36 +20,36 @@ const main = async () => {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${accessToken}`,
     },
-  })
+  });
 
   if (projectsError) {
-    spinner.clear()
-    spinner.error()
-    console.error(chalk.red(projectsError))
+    spinner.clear();
+    spinner.error();
+    console.error(chalk.red(projectsError));
 
-    process.exit(1)
+    process.exit(1);
   }
-  if (!projectsData || isEmpty(projectsData.projects)) {
-    spinner.clear()
-    spinner.error({ text: chalk.red('No projects found, Aborting.') })
+  if (!projectsData || projectsData.projects.length === 0) {
+    spinner.clear();
+    spinner.error({ text: chalk.red('No projects found, Aborting.') });
 
-    process.exit(1)
+    process.exit(1);
   }
 
   spinner.success({
     text: chalk.green(`Found ${projectsData.projects.length} projects under your account.`),
-  })
+  });
 
   const projectIds = projectsData.projects
     .sort((p1, p2) => p1.name.toLocaleLowerCase().localeCompare(p2.name.toLocaleLowerCase()))
-    .map(p => p.projectId)
+    .map(p => p.projectId);
 
   const promptProjectsAndGetInstances = async (): Promise<{
-    selectedProjectId: string
+    selectedProjectId: string;
     instances: {
-      name: string
-      authorizedNetworks: GCPInstanceAclEntry[]
-    }[]
+      name: string;
+      authorizedNetworks: GCPInstanceAclEntry[];
+    }[];
   }> => {
     const { selectedProjectId } = await inquirer.prompt({
       name: 'selectedProjectId',
@@ -59,10 +58,10 @@ const main = async () => {
       loop: false,
       pageSize: 20,
       choices: projectIds,
-    })
-    const spinner = createSpinner(`Fetching SQL instances for ${selectedProjectId}`).start()
+    });
+    const spinner = createSpinner(`Fetching SQL instances for ${selectedProjectId}`).start();
     const [instancesData, instancesError] = await request<{
-      items: GCPInstance[]
+      items: GCPInstance[];
     }>({
       method: 'GET',
       url: `https://sqladmin.googleapis.com/sql/v1beta4/projects/${selectedProjectId}/instances`,
@@ -73,27 +72,27 @@ const main = async () => {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${accessToken}`,
       },
-    })
+    });
 
     if (instancesError) {
-      spinner.clear()
-      spinner.error()
-      console.error(chalk.red(instancesError))
+      spinner.clear();
+      spinner.error();
+      console.error(chalk.red(instancesError));
 
-      return promptProjectsAndGetInstances()
+      return promptProjectsAndGetInstances();
     }
-    if (!instancesData || isEmpty(instancesData.items)) {
-      spinner.clear()
-      spinner.error({ text: chalk.red(`No SQL instances found for ${selectedProjectId}`) })
+    if (!instancesData || instancesData.items.length === 0) {
+      spinner.clear();
+      spinner.error({ text: chalk.red(`No SQL instances found for ${selectedProjectId}`) });
 
-      return promptProjectsAndGetInstances()
+      return promptProjectsAndGetInstances();
     }
 
     spinner.success({
       text: chalk.green(
         `Found ${instancesData.items.length} SQL instances for ${selectedProjectId}`,
       ),
-    })
+    });
 
     return {
       selectedProjectId,
@@ -108,10 +107,10 @@ const main = async () => {
           )
           .sort((n1, n2) => n1.name.toLocaleLowerCase().localeCompare(n2.name.toLocaleLowerCase())),
       })),
-    }
-  }
+    };
+  };
 
-  const { selectedProjectId, instances } = await promptProjectsAndGetInstances()
+  const { selectedProjectId, instances } = await promptProjectsAndGetInstances();
 
   const { selectedInstanceId } = await inquirer.prompt({
     name: 'selectedInstanceId',
@@ -120,17 +119,17 @@ const main = async () => {
     loop: false,
     pageSize: 20,
     choices: instances,
-  })
+  });
 
-  const selectedInstance = instances.find(i => i.name === selectedInstanceId)
+  const selectedInstance = instances.find(i => i.name === selectedInstanceId);
 
   if (!selectedInstance) {
-    console.error(chalk.red('Something went wrong, Aborting.'))
-    process.exit(1)
+    console.error(chalk.red('Something went wrong, Aborting.'));
+    process.exit(1);
   }
-  if (isEmpty(selectedInstance.authorizedNetworks)) {
-    console.log('No existing authorized networks found')
-    process.exit(0)
+  if (selectedInstance.authorizedNetworks.length === 0) {
+    console.log('No existing authorized networks found');
+    process.exit(0);
   }
 
   const { updateExisting } = await inquirer.prompt({
@@ -140,7 +139,7 @@ const main = async () => {
     loop: false,
     pageSize: 20,
     choices: ['Yes', 'No'],
-  })
+  });
 
   if (updateExisting === 'Yes') {
     const { selectedNetworkName } = await inquirer.prompt({
@@ -150,38 +149,42 @@ const main = async () => {
       loop: false,
       pageSize: 20,
       choices: selectedInstance.authorizedNetworks.map(n => n.name),
-    })
+    });
 
     const selectedNetwork = selectedInstance.authorizedNetworks.find(
       i => i.name === selectedNetworkName,
-    )
+    );
 
     if (!selectedNetwork) {
-      console.error(chalk.red('Something went wrong, Aborting.'))
-      process.exit(1)
+      console.error(chalk.red('Something went wrong, Aborting.'));
+      process.exit(1);
     }
 
-    const ipAddress = await exec('curl -s GET checkip.amazonaws.com')
+    const ipAddress = await exec('curl -s GET checkip.amazonaws.com');
 
     if (!ipAddress) {
-      console.error(chalk.red('Failed to get IP address, Aborting.'))
-      process.exit(1)
+      console.error(chalk.red('Failed to get IP address, Aborting.'));
+      process.exit(1);
     }
 
-    const cidrIpAddress = ipAddress.replace(/(?<=\.)([0-9]{1,3})$/, '0/24')
+    const cidrIpAddress = ipAddress.replace(/(?<=\.)([0-9]{1,3})$/, '0/24');
 
     const existingNetworkNameIdx = selectedInstance.authorizedNetworks.findIndex(
       network => network.name.toLowerCase() === selectedNetworkName.toLowerCase(),
-    )
+    );
 
-    selectedInstance.authorizedNetworks[existingNetworkNameIdx] = {
-      ...selectedInstance.authorizedNetworks[existingNetworkNameIdx],
-      value: cidrIpAddress,
+    let existingNetwork = selectedInstance.authorizedNetworks[existingNetworkNameIdx];
+
+    if (existingNetwork) {
+      existingNetwork = {
+        ...existingNetwork,
+        value: cidrIpAddress,
+      };
     }
 
-    const spinner = createSpinner(`Updating ${chalk.underline(selectedNetworkName)}`).start()
+    const spinner = createSpinner(`Updating ${chalk.underline(selectedNetworkName)}`).start();
     const [_updateNetworkData, updateNetworkError] = await request<{
-      items: GCPInstance[]
+      items: GCPInstance[];
     }>({
       method: 'PATCH',
       url: `https://sqladmin.googleapis.com/sql/v1beta4/projects/${selectedProjectId}/instances/${selectedInstanceId}`,
@@ -196,13 +199,13 @@ const main = async () => {
           },
         },
       }),
-    })
+    });
 
     if (updateNetworkError) {
-      spinner.clear()
-      spinner.error()
-      console.error(chalk.red(updateNetworkError))
-      process.exit(1)
+      spinner.clear();
+      spinner.error();
+      console.error(chalk.red(updateNetworkError));
+      process.exit(1);
     }
 
     spinner.success({
@@ -211,13 +214,13 @@ const main = async () => {
           selectedNetworkName,
         )}, new IP address: ${chalk.underline(cidrIpAddress)}`,
       ),
-    })
+    });
 
-    process.exit(0)
+    process.exit(0);
   } else {
-    console.log('Aborting.')
-    process.exit(0)
+    console.log('Aborting.');
+    process.exit(0);
   }
-}
+};
 
-main()
+main();
