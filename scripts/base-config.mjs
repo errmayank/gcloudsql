@@ -25,5 +25,6 @@ export const baseConfig = {
   banner: { js: [env, pkgBanner, requirePolyfill].join('\n\n') },
   platform: 'node',
   target: ['node18'],
+  packages: 'external',
   outdir: './dist/bin',
 };

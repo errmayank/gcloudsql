@@ -1,7 +1,7 @@
 {
   "name": "gcloudsql",
   "private": false,
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Minimal command line tool for adding/updating authorized networks on Google Cloud SQL",
   "license": "MIT",
   "author": {

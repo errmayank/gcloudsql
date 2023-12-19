@@ -1,5 +1,5 @@
-import util from 'util';
-import { exec as nativeExec } from 'child_process';
+import util from 'node:util';
+import { exec as nativeExec } from 'node:child_process';
 
 export const exec = async (cmd: string) => {
   try {
