@@ -4,7 +4,7 @@ import { createSpinner } from 'nanospinner';
 
 import { exec } from '../utils/exec.js';
 import { request } from '../utils/request.js';
-import type { GCPInstance, GCPInstanceAclEntry, GCPProject } from '../schema.js';
+import type { GCPInstance, GCPInstanceAclEntry, GCPProject } from '../types/schema.js';
 
 const main = async () => {
   const accessToken = await exec('gcloud auth print-access-token');

@@ -5,22 +5,22 @@ import esbuild from 'esbuild';
 import { baseConfig } from './base-config.mjs';
 
 /** @type {ChildProcess} */
-let server = null;
+let process = null;
 
 let ctx = await esbuild.context({
   ...baseConfig,
   plugins: [
     {
-      name: 'run_server',
+      name: 'watch_changes',
       setup(build) {
         build.onStart(() => {
-          if (server !== null) {
+          if (process !== null) {
             console.log('Change detected, restarting.');
-            server.kill();
+            process.kill();
           }
         });
         build.onEnd(() => {
-          server = spawn('node', [`${cwd()}/dist/main.js`], {
+          process = spawn('node', [`${cwd()}/dist/bin/main.js`], {
             stdio: 'inherit',
           });
         });
